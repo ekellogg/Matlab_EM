@@ -1,0 +1,6 @@
+*.mrc
+*.zip
+*.tar
+*.pdb
+*.pdf
+drift_corr/results/*.pdf

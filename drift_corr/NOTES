@@ -1,0 +1,26 @@
+control_nodrift_correction:
+simple summation of images with no drift correction, negative control
+
+control_leginon_sums_nodriftcorr:
+simple summation of images obtained with leginon, alternative negative control which tests the basic matlab utilities. Should be exactly the same as control_nodrift_correction
+
+control_leginon_dfcorr_corrected:
+en-a images obtained from old motioncorr algorithm, serves as positive control
+
+liz test 1:
+initial drift correction test with image summation in real-space and simple peak finding (max of autocorreltion map)
+
+liz test 2:
+added refinement of autocorrelation peak position. Did this by cropping out 16 x 16 pixels surrounding autocorrelation maxima, padding this in Fourier space and then using the increased sampling around the maximum to pinpoint the peak to sub-pixel accuracy
+
+liz test 3:
+added summation of images in fourier space instead of real-space. 
+
+liz test 4:
+also changed the form of the image shift fft function. according to frank's book it wasn't correct originally (scaled by 1/boxsize*apix) 
+
+TO DO:
+* b-factor function is definitely wrong. You are not using correct units for spatial frequency, which should be in 1/pixel. Yours are in 1/Angstrom. Need to fix.
+* currently takes about 5 min per image which is too frickin slow. Need to speed up, potentially by converting to python code. 
+*** check units all throughout the code. it's likely that things are not working exactly because your units are off.. likely in the b-factor functino and the image shift function. are you shifting by pixels or in angstrom? because your shifts are in pixels...
+
