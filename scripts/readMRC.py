@@ -1,6 +1,13 @@
 import struct
-from numpy import fromfile, meshgrid, power, sqrt, exp
+from numpy import fromfile, meshgrid, power, sqrt, exp, vectorize, divide, multiply
 from numpy.fft import fft2, fftshift, rfft2, ifft2, ifftshift
+import sys
+import numpy as np
+import scipy
+from joblib import Parallel, delayed
+import multiprocessing
+
+
 #from math import exp, sqrt
 
 class ReadMRC:
@@ -9,38 +16,41 @@ class ReadMRC:
          self.numbytes2=80*10          # 10 header lines of 80 chars each
          self.filename=filename
          self.frames = list()
+
     def bfactor(self, framenum, bfactor):
-            #function[bimg] = apply_bfact(img,bfactor)
-            #%add padding in FFT to minimize interpolation error
-            #c = ceil(size(img))./2;
-            #x = 1:1:size(img,1);
-            #y = 1:1:size(img,2);
-            #[X,Y] = meshgrid(x,y);
-            #f = (sqrt((X-c(1)).^2 + (Y-c(2)).^2))./(size(img,1));
-            #z = exp(-0.5*bfactor*(f.^2));
-            #bimg = real(ifft2(ifftshift(  fftshift(fft2(img)).*z  )));
-            #page number 259
-            framedata = self.frames[framenum]
-            fft = fft2(framedata)
-            #print(fft)
-            print(type(fft))
-            finalsize = min(len(fft), len(fft[0]))
-            print('finalsize is ' + str(finalsize))
-            c = finalsize / 2
+        #function[bimg] = apply_bfact(img,bfactor)
+        #%add padding in FFT to minimize interpolation error
+        #c = ceil(size(img))./2;
+        #x = 1:1:size(img,1);
+        #y = 1:1:size(img,2);
+        #[X,Y] = meshgrid(x,y);
+        #f = (sqrt((X-c(1)).^2 + (Y-c(2)).^2))./(size(img,1));
+        #z = exp(-0.5*bfactor*(f.^2));
+        #bimg = real(ifft2(ifftshift(  fftshift(fft2(img)).*z  )));
+        #page number 259
 
-            #xgrid, ygrid = meshgrid(x, y)
-            ffconstant = fftshift(fft2(fft))
-            print('ffconstant is ' + str(ffconstant))
-            for i in range(finalsize):
-                for j in range(finalsize):
-                    #treat xv[j,i], yv[j,i]
-                    tempf = sqrt(power(fft[i][j] - c, 2) + power(fft[i][j] - c, 2)) / finalsize
-                    tempz = exp(-0.5 * bfactor * power(tempf, 2));
-                    fft[i][j] = ffconstant[i][j] * tempz
+        framedata = self.frames[framenum]
+        finalsize = min(len(framedata), len(framedata[0]))
 
+        def squarifyFun(a):
+            cut1 = a[:finalsize]
+            for i in cut1:
+                i = i[:finalsize]
+            return cut1
 
-            return ifft2(ifftshift(fft)).real
+        fft = squarifyFun(framedata)
 
+        #print('finalsize is ' + str(finalsize))
+        c = finalsize / 2
+
+        xv, yv = meshgrid([x for x in range(finalsize)], [x for x in range(finalsize)], sparse=False, indexing='ij')
+
+        f = divide(sqrt(pow(xv-c, 2) + pow(yv - c, 2)), finalsize)
+        #print('f is ' + str(f))
+        z = exp(-0.5*bfactor*pow(f,2));
+        bimg = ifft2(ifftshift(  multiply(fftshift(fft2(fft)), z)  )).real
+        print('bimg is ' + str(bimg))
+        return bimg
 
         
 
@@ -82,4 +92,4 @@ test = ReadMRC('test-stack.mrc')
 test.read()
 #print('self.dim is ' + str(test.dim))
 #print(test.frames[0])
-test.bfactor(0, 150)
+print(test.bfactor(0, 150))
