@@ -6,6 +6,7 @@ import numpy as np
 import scipy
 from joblib import Parallel, delayed
 import multiprocessing
+from PIL import Image
 
 
 #from math import exp, sqrt
@@ -92,4 +93,7 @@ test = ReadMRC('test-stack.mrc')
 test.read()
 #print('self.dim is ' + str(test.dim))
 #print(test.frames[0])
-print(test.bfactor(0, 150))
+a = test.bfactor(0, 150)
+img = Image.fromarray(a, 'L')
+img.save('coo.png')
+img.show()
