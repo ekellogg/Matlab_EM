@@ -1,15 +1,14 @@
 import struct
-from numpy import fromfile, meshgrid, power, sqrt, exp, vectorize, divide, multiply
-from numpy.fft import fft2, fftshift, rfft2, ifft2, ifftshift
+from numpy import fromfile, meshgrid, power, sqrt, exp, vectorize, divide, multiply, subtract, add, log
+from numpy.fft import fft2, fftshift, rfft2, ifft2, ifftshift, irfft2, fftn, ifftn
 import sys
 import numpy as np
 import scipy
 from joblib import Parallel, delayed
 import multiprocessing
 from PIL import Image
-
-
-#from math import exp, sqrt
+import pylab
+import time
 
 class ReadMRC:
     def __init__(self,filename):
@@ -17,20 +16,16 @@ class ReadMRC:
          self.numbytes2=80*10          # 10 header lines of 80 chars each
          self.filename=filename
          self.frames = list()
+         self.test = False
 
-    def bfactor(self, framenum, bfactor):
-        #function[bimg] = apply_bfact(img,bfactor)
-        #%add padding in FFT to minimize interpolation error
-        #c = ceil(size(img))./2;
-        #x = 1:1:size(img,1);
-        #y = 1:1:size(img,2);
-        #[X,Y] = meshgrid(x,y);
-        #f = (sqrt((X-c(1)).^2 + (Y-c(2)).^2))./(size(img,1));
-        #z = exp(-0.5*bfactor*(f.^2));
-        #bimg = real(ifft2(ifftshift(  fftshift(fft2(img)).*z  )));
-        #page number 259
+    def bfactorReal(self, framenum, bfactor):
+        return self.bfactor(self.frames[framenum], bfactor)
+    #For Car Test
+    def bfactorTest(self, image, bfactor):
+        return self.bfactor(image, bfactor)
 
-        framedata = self.frames[framenum]
+    def bfactor(self, framedata, bfactor):
+        framedata = np.array(framedata)
         finalsize = min(len(framedata), len(framedata[0]))
 
         def squarifyFun(a):
@@ -39,18 +34,22 @@ class ReadMRC:
                 i = i[:finalsize]
             return cut1
 
-        fft = squarifyFun(framedata)
+        framedata = squarifyFun(framedata)
 
         #print('finalsize is ' + str(finalsize))
         c = finalsize / 2
 
-        xv, yv = meshgrid([x for x in range(finalsize)], [x for x in range(finalsize)], sparse=False, indexing='ij')
+        xv, yv = meshgrid([x for x in range(finalsize)], [x for x in range(finalsize)],indexing='xy')
 
-        f = divide(sqrt(pow(xv-c, 2) + pow(yv - c, 2)), finalsize)
-        #print('f is ' + str(f))
-        z = exp(-0.5*bfactor*pow(f,2));
-        bimg = ifft2(ifftshift(  multiply(fftshift(fft2(fft)), z)  )).real
-        print('bimg is ' + str(bimg))
+        f = divide(sqrt(pow(subtract(xv, c), 2) + pow(subtract(yv, c), 2)), finalsize)
+        z = exp(multiply(pow(f,2), -0.5*bfactor));
+        startline = time.time()
+        #######
+        bimg = ifft2(ifftshift(  multiply(fftshift(fft2(framedata)), z)          )).real
+        #######
+
+        print('Slow Line line took ' + str(time.time() - startline))
+        #print('bimg is ' + str(bimg))
         return bimg
 
         
@@ -89,11 +88,28 @@ class ReadMRC:
 ##########
 # Start  #
 ##########
+
+
+#Car Example
+#test = ReadMRC('notimportant')
+#im = Image.open("f.png").convert('L')
+#a = np.asarray(im)
+# Before #
+#pylab.imshow(a, cmap = pylab.get_cmap('gray'))
+#pylab.show()
+#print(a)
+#b = test.bfactorTest(a, 550)
+# After #
+#pylab.imshow(b, cmap = pylab.get_cmap('gray'))
+#pylab.show()
+
+
+## Example on frame one of test-stack.mrc
+st = time.time()
 test = ReadMRC('test-stack.mrc')
 test.read()
-#print('self.dim is ' + str(test.dim))
-#print(test.frames[0])
-a = test.bfactor(0, 150)
-img = Image.fromarray(a, 'L')
-img.save('coo.png')
-img.show()
+a = test.bfactorReal(0, 150)
+ft = time.time() - st
+print(ft)
+pylab.imshow(a, cmap = pylab.get_cmap('gray'))
+pylab.show()
