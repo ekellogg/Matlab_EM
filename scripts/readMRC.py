@@ -24,6 +24,56 @@ class ReadMRC:
     def bfactorTest(self, image, bfactor):
         return self.bfactor(image, bfactor)
 
+    def create_coeff_matrix(self, input):
+        pass
+        #function[A] = create_coeff_matrix(i)
+
+        inputLength = len(input)
+
+        #A = gpuArray(zeros(length(i),length(i)-1));
+        A = np.zeros(inputLength, inputLength - 1)
+
+        #ii = i(1);
+        ii = input(1)
+
+        #ndx = 1;
+        ndx = 1
+
+        #while(ii <= i(length(i)))
+        while(ii <= input(inputLength)):
+
+            #jj = ii+1;
+            jj = ii + 1
+
+            #while(jj < i(length(i))  )
+            while(jj < input(inputLength))
+
+                #A(ndx,ii:jj) = 1;
+                A[ndx, ii:jj] = 1
+
+                #%do not align frames that are adjacent
+                #jj = jj + 1;
+                jj += 1
+
+                #ndx = ndx + 1;
+                ndx += 1
+            #ii = ii + 1;
+            ii += 1
+
+
+    def driftCorrection(self, image):
+        pass
+        #nfr = size(fr,3);
+        nfr = len(image)
+
+        #create matrix A
+        #A = create_coeff_matrix(1:nfr);
+        A = self.create_coeff_matrix() ######HMMMMMM
+
+        #b = calculate_corr_vector_v2(1:nfr,fr);
+        b = 
+        #img_shift = inv(transpose(A)*A)*transpose(A)*b;
+
     def bfactor(self, framedata, bfactor):
         framedata = np.array(framedata)
         finalsize = min(len(framedata), len(framedata[0]))
