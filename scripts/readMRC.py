@@ -24,41 +24,48 @@ class ReadMRC:
     def bfactorTest(self, image, bfactor):
         return self.bfactor(image, bfactor)
 
-    def create_coeff_matrix(self, input):
+    def create_coeff_matrix(self, numframes):
         pass
         #function[A] = create_coeff_matrix(i)
 
-        inputLength = len(input)
+        #inputLength = len(input)
 
         #A = gpuArray(zeros(length(i),length(i)-1));
-        A = np.zeros(inputLength, inputLength - 1)
+        A = np.zeros((numframes*2, numframes -1))
 
+        print('start is ' + str(A))
         #ii = i(1);
-        ii = input(1)
+        ii = 0
 
         #ndx = 1;
-        ndx = 1
+        ndx = 0
 
         #while(ii <= i(length(i)))
-        while(ii <= input(inputLength)):
+        for ii in range(numframes/2):
 
             #jj = ii+1;
-            jj = ii + 1
+            #jj = ii 
 
             #while(jj < i(length(i))  )
-            while(jj < input(inputLength))
+            for jj in range(ii+1, numframes):
 
                 #A(ndx,ii:jj) = 1;
-                A[ndx, ii:jj] = 1
+                print('ndx is ' + str(ndx) + ' ii jj is  ' + str(ii) + ' ' + str(jj))
+
+                A[ndx][ii:jj] = 1
+                print('a is now ' + str(A) + '\n')
 
                 #%do not align frames that are adjacent
                 #jj = jj + 1;
-                jj += 1
+                #jj += 1
 
                 #ndx = ndx + 1;
                 ndx += 1
             #ii = ii + 1;
-            ii += 1
+
+
+
+        return A
 
 
     def driftCorrection(self, image):
@@ -70,8 +77,10 @@ class ReadMRC:
         #A = create_coeff_matrix(1:nfr);
         A = self.create_coeff_matrix() ######HMMMMMM
 
+        return A
+
         #b = calculate_corr_vector_v2(1:nfr,fr);
-        b = 
+        #b = 
         #img_shift = inv(transpose(A)*A)*transpose(A)*b;
 
     def bfactor(self, framedata, bfactor):
@@ -155,11 +164,11 @@ class ReadMRC:
 
 
 ## Example on frame one of test-stack.mrc
-st = time.time()
-test = ReadMRC('test-stack.mrc')
-test.read()
-a = test.bfactorReal(0, 150)
-ft = time.time() - st
-print(ft)
-pylab.imshow(a, cmap = pylab.get_cmap('gray'))
-pylab.show()
+#st = time.time()
+#test = ReadMRC('test-stack.mrc')
+#test.read()
+#a = test.bfactorReal(0, 150)
+#ft = time.time() - st
+#print(ft)
+#pylab.imshow(a, cmap = pylab.get_cmap('gray'))
+#pylab.show()
