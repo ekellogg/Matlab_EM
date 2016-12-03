@@ -1,5 +1,5 @@
 import struct
-from numpy import fromfile, meshgrid, power, sqrt, exp, vectorize, divide, multiply, subtract, add, log
+from numpy import fromfile, meshgrid, power, sqrt, exp, vectorize, divide, multiply, subtract, add, log, mean
 from numpy.fft import fft2, fftshift, rfft2, ifft2, ifftshift, irfft2, fftn, ifftn
 import sys
 import numpy as np
@@ -23,6 +23,38 @@ class ReadMRC:
     #For Car Test
     def bfactorTest(self, image, bfactor):
         return self.bfactor(image, bfactor)
+
+    #function[corr_coeff] = calculate_corr_vector(elems_to_compare,frstack)
+    def calculate_corr_vector(elements, framestack):
+
+        #n = length(elems_to_compare);
+        n = len(elements)
+
+        #corr_coeff = zeros((n*(n-1))/2,2);
+        corr_coef = np.zeros(n * (n - 1) / 2, 2)
+
+        #vectorize for speed
+        #ndx=1;
+        ndx = 1
+
+        #for( i = 1:(n-2) )
+        for i in range(0, n - 3):
+
+            #array1 = (frstack(:,:,i) - mean(mean(frstack(:,:,i))));
+            array1 = framestack[:][:][i] - np.mean(np.mean(framestack[:][:][i]))
+
+            #[xx,yy] = arrayfun(@(ind) findmax(xcorr2_fft(sub_mean(frstack(:,:,i)),sub_mean(frstack(:,:,ind)) )),...
+            [xx, yy]
+                                              (i+2):n);
+          %  tic; [xx,yy] = arrayfun(@(ind) refine_autocorr_peak(xcorr2_fft(sub_mean(frstack(:,:,i)),sub_mean(frstack(:,:,ind)))),...
+          %                             (i+1):n); toc;
+            corr_coeff(ndx:(ndx+length(xx)-1),:) = [-(xx-size(frstack,1))' -(yy-size(frstack,2))'];
+            ndx=ndx+length(xx);
+        end
+        corr_coeff = corr_coeff(1:(ndx-1),:);
+    end
+
+
 
     def create_coeff_matrix(self, numframes):
         pass
